@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metodologia — Manutenibilidade de Código LLM vs Humano</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --accent: #0969da;
+    --accent-bg: #ddf4ff;
+    --warn: #9a6700;
+    --warn-bg: #fff8c5;
+    --code-bg: #f6f8fa;
+    --border: #d0d7de;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+  header {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+  }
+  h1 { margin: 0 0 0.5rem; font-size: 1.8rem; }
+  header .sub { color: var(--muted); font-size: 0.95rem; }
+  h2 {
+    margin-top: 2.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.4rem;
+  }
+  h3 { margin-top: 1.5rem; font-size: 1.15rem; color: var(--accent); }
+  code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+    font-size: 0.9em;
+    font-family: "Consolas", "Monaco", monospace;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.88em;
+  }
+  pre code { border: none; padding: 0; background: transparent; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  th { background: var(--code-bg); }
+  .toc {
+    background: var(--accent-bg);
+    border-left: 4px solid var(--accent);
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+  .toc ol { margin: 0.5rem 0 0 1.2rem; padding: 0; }
+  .callout {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+  }
+  .callout strong { color: var(--warn); }
+  .rq {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+  }
+  .rq .tag {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.15em 0.5em;
+    border-radius: 3px;
+    margin-right: 0.5rem;
+  }
+  .step {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .step h2 { margin-top: 0; border: none; }
+  ul, ol { padding-left: 1.4rem; }
+  li { margin: 0.3rem 0; }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Manutenibilidade de Código Gerado por LLMs ao Longo do Tempo</h1>
+  <div class="sub">Metodologia experimental — análise comparativa via GitHub API + SonarQube</div>
+</header>
+
+<div class="toc">
+  <strong>Sumário</strong>
+  <ol>
+    <li><a href="#contexto">Contexto e objetivo</a></li>
+    <li><a href="#etapa1">Etapa 1 — Refinar a pergunta de pesquisa</a></li>
+    <li><a href="#etapa2">Etapa 2 — Identificar commits de IA</a></li>
+    <li><a href="#etapa3">Etapa 3 — Seleção do projeto</a></li>
+    <li><a href="#etapa4">Etapa 4 — Coleta de dados</a></li>
+    <li><a href="#etapa5">Etapa 5 — Análise com SonarQube</a></li>
+    <li><a href="#etapa6">Etapa 6 — Métricas a comparar</a></li>
+    <li><a href="#etapa7">Etapa 7 — Análise estatística</a></li>
+    <li><a href="#threats">Ameaças à validade</a></li>
+    <li><a href="#proximo">Próximo passo prático</a></li>
+  </ol>
+</div>
+
+<section id="contexto">
+  <h2>Contexto e objetivo</h2>
+  <p>Este documento descreve o desenho experimental para avaliar empiricamente se código gerado por LLMs (Large Language Models) tem manutenibilidade inferior à de código humano, observando a evolução de métricas de qualidade ao longo do tempo em projetos open-source com histórico misto.</p>
+  <p><strong>Ferramentas centrais:</strong> GitHub REST/Search API (coleta de commits) e SonarQube (métricas de qualidade).</p>
+</section>
+
+<section class="step" id="etapa1">
+  <h2>Etapa 1 — Refinar a pergunta de pesquisa</h2>
+  <p>Antes de coletar dados, operacionalizar a RQ. Três possibilidades:</p>
+  <div class="rq"><span class="tag">RQ1</span>Código gerado por LLM tem mais <em>code smells</em> ao ser introduzido do que código humano?</div>
+  <div class="rq"><span class="tag">RQ2</span><em>Code smells</em> introduzidos por LLM persistem mais tempo que os de humanos? <strong>(recomendado — alinhado com "ao longo do tempo")</strong></div>
+  <div class="rq"><span class="tag">RQ3</span>Arquivos tocados por LLM acumulam dívida técnica mais rápido em commits subsequentes?</div>
+</section>
+
+<section class="step" id="etapa2">
+  <h2>Etapa 2 — Identificar commits de IA</h2>
+  <p>Assinaturas conhecidas em commits:</p>
+  <ul>
+    <li><strong>Aider:</strong> <code>Co-authored-by: aider (gpt-4) &lt;noreply@aider.chat&gt;</code></li>
+    <li><strong>Claude Code:</strong> <code>Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;</code></li>
+    <li><strong>GitHub Copilot agent:</strong> autor <code>Copilot &lt;copilot@github.com&gt;</code></li>
+    <li><strong>Devin / Cursor agents:</strong> padrões próprios no autor ou co-autor</li>
+    <li><strong>Copilot inline (autocomplete):</strong> <em>não marca</em> — invisível. Esses commits ficam no grupo "humano". Declarar como ameaça à validade.</li>
+  </ul>
+  <h3>Exemplos de busca via GitHub Search API</h3>
+<pre><code>GET https://api.github.com/search/commits?q=author-email:noreply@aider.chat
+GET https://api.github.com/search/commits?q=%22Co-authored-by:+aider%22
+GET https://api.github.com/search/commits?q=author:Copilot
+
+Header: Accept: application/vnd.github.cloak-preview+json</code></pre>
+</section>
+
+<section class="step" id="etapa3">
+  <h2>Etapa 3 — Seleção do projeto</h2>
+  <p>Critérios objetivos (documentar na dissertação):</p>
+  <table>
+    <thead>
+      <tr><th>Critério</th><th>Valor mínimo sugerido</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Idade do repositório</td><td>≥ 3 anos</td></tr>
+      <tr><td>Total de commits</td><td>≥ 1000</td></tr>
+      <tr><td>Commits de IA identificáveis</td><td>≥ 100</td></tr>
+      <tr><td>Commits humanos no mesmo período</td><td>≥ 100</td></tr>
+      <tr><td>Linguagem suportada pelo Sonar</td><td>Python / Java / JS / TS / Go / C#</td></tr>
+      <tr><td>Licença</td><td>Open-source</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Estratégia prática:</strong> rodar a Search API filtrando por co-autor IA, agrupar por repositório, e selecionar os top-N que atendem aos critérios. Bons candidatos: projetos onde o mantenedor usa Aider sobre si mesmo (ex.: <code>paul-gauthier/aider</code>) ou onde Copilot Agent abre PRs.</p>
+</section>
+
+<section class="step" id="etapa4">
+  <h2>Etapa 4 — Coleta de dados</h2>
+  <p>Para cada commit relevante, armazenar:</p>
+  <ul>
+    <li>SHA</li>
+    <li>Data de autoria</li>
+    <li>Autor (login + email)</li>
+    <li>Flag <code>is_ai</code> (boolean)</li>
+    <li>Arquivos modificados</li>
+    <li>Linhas adicionadas / removidas</li>
+  </ul>
+  <p>Salvar em CSV ou SQLite. Bibliotecas sugeridas: <code>PyGithub</code> ou <code>requests</code> direto. Atenção ao rate limit (5000 req/h autenticado).</p>
+</section>
+
+<section class="step" id="etapa5">
+  <h2>Etapa 5 — Análise com SonarQube</h2>
+  <p>Decisão de design crítica:</p>
+
+  <h3>Opção A — Snapshot por commit (caro, preciso)</h3>
+  <p>Para cada commit selecionado: <code>git checkout &lt;sha&gt;</code> e rodar o scanner. Um projeto Sonar por snapshot, ou <code>sonar.projectVersion=&lt;sha&gt;</code>. Permite traçar evolução fina.</p>
+  <p><strong>Limitação:</strong> 200 commits × ~3 min ≈ 10h+ de processamento.</p>
+
+  <h3>Opção B — Issue lifetime (recomendado)</h3>
+  <p>Rodar o scanner apenas no <code>HEAD</code>. Cada <em>issue</em> tem <code>creationDate</code> e <code>closeDate</code> — mapeie smell → commit → autor (IA ou humano) e meça <strong>tempo até resolução</strong> (= persistência).</p>
+<pre><code>GET /api/issues/search?componentKeys=&lt;projeto&gt;&amp;createdAfter=...</code></pre>
+  <p>Combine com <code>git blame</code> no commit de criação para confirmar autoria. <strong>Responde a RQ2 de forma mais limpa e barata.</strong></p>
+</section>
+
+<section class="step" id="etapa6">
+  <h2>Etapa 6 — Métricas a comparar</h2>
+  <p>Para cada grupo (IA vs humano):</p>
+  <ul>
+    <li><strong>Densidade de smells na introdução:</strong> smells por 100 linhas adicionadas</li>
+    <li><strong>Tempo de vida do smell:</strong> dias entre <code>creationDate</code> e <code>closeDate</code> (censurado se ainda aberto)</li>
+    <li><strong>Severidade:</strong> distribuição BLOCKER / CRITICAL / MAJOR / MINOR / INFO</li>
+    <li><strong>Tipo:</strong> Bug, Vulnerability, Code Smell, Security Hotspot</li>
+    <li><strong>Complexidade ciclomática</strong> dos métodos tocados</li>
+    <li><strong>Duplicação</strong> introduzida</li>
+  </ul>
+</section>
+
+<section class="step" id="etapa7">
+  <h2>Etapa 7 — Análise estatística</h2>
+  <ul>
+    <li><strong>Teste de hipótese:</strong> Mann-Whitney U (não-paramétrico) para distribuições IA vs humano</li>
+    <li><strong>Análise de sobrevivência:</strong> Kaplan-Meier + log-rank para tempo até correção do smell. <em>Análise principal da RQ2.</em></li>
+    <li><strong>Tamanho do efeito:</strong> Cliff's delta</li>
+    <li>Reportar intervalos de confiança, não apenas p-valor</li>
+  </ul>
+</section>
+
+<section id="threats">
+  <h2>Ameaças à validade</h2>
+  <div class="callout">
+    <strong>Obrigatório na dissertação.</strong> Documente cada uma destas limitações:
+  </div>
+  <ul>
+    <li>Copilot inline não é detectável → grupo "humano" contaminado</li>
+    <li>Um commit pode misturar código IA + edição humana</li>
+    <li>Um único projeto = baixa validade externa → considerar 3–5 projetos</li>
+    <li>Regras do Sonar mudam entre versões → fixar a versão usada</li>
+    <li>Confounders: experiência do autor, complexidade do módulo, idade do código</li>
+  </ul>
+</section>
+
+<section id="proximo">
+  <h2>Próximo passo prático</h2>
+  <p>Começar pela <strong>Etapa 2</strong>: montar um script Python que consulta a Search API do GitHub e devolve uma lista de candidatos a projeto, com contagem de commits de IA e commits humanos por repositório.</p>
+</section>
+
+<footer>
+  Documento gerado para apoiar pesquisa de mestrado · Última atualização: 2026-05-18
+</footer>
+
+</body>
+</html>
