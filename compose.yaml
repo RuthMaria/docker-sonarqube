@@ -1,6 +1,6 @@
 services:
   sonarqube:
-    image: sonarqube:lts-community
+    image: sonarqube:community
     depends_on:
       - db
     networks:
@@ -10,7 +10,7 @@ services:
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
     ports:
-      - "9000:9000"
+      - "9002:9000"
     volumes:
       - sonar_data:/opt/sonarqube/data
       - sonar_logs:/opt/sonarqube/logs

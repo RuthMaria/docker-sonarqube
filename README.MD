@@ -31,6 +31,20 @@ Este arquivo configura a rede e volumes necessários para que o SonarQube e o Po
 
 Para criar e iniciar os serviços definidos no arquivo `compose.yaml`, utilize o seguinte comando:
 
+Cria os container
+
 ```sh
 docker compose up -d
 ```
+
+Lista os container
+
+```sh
+docker container ls
+```
+
+Entra no link localhost:9002
+Loga com as credenciais (nome: admin e senha: admin) e altera as credenciais
+
+user: admin
+senha: Ruthmaria12345@
