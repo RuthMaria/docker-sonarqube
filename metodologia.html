@@ -206,7 +206,7 @@ Header: Accept: application/vnd.github.cloak-preview+json</code></pre>
     <li>Arquivos modificados</li>
     <li>Linhas adicionadas / removidas</li>
   </ul>
-  <p>Salvar em CSV ou SQLite. Bibliotecas sugeridas: <code>PyGithub</code> ou <code>requests</code> direto. Atenção ao rate limit (5000 req/h autenticado).</p>
+  <p>Salvar em SQLite (mais simples de consultar depois que CSV). Stack sugerida: <strong>Node.js + TypeScript</strong>, com <code>@octokit/rest</code> (SDK oficial do GitHub, tipado, com paginação e rate-limit automáticos) e <code>better-sqlite3</code>. Atenção ao rate limit: 5000 req/h autenticado, 30 req/min na Search API.</p>
 </section>
 
 <section class="step" id="etapa5">
@@ -262,7 +262,7 @@ Header: Accept: application/vnd.github.cloak-preview+json</code></pre>
 
 <section id="proximo">
   <h2>Próximo passo prático</h2>
-  <p>Começar pela <strong>Etapa 2</strong>: montar um script Python que consulta a Search API do GitHub e devolve uma lista de candidatos a projeto, com contagem de commits de IA e commits humanos por repositório.</p>
+  <p>Começar pela <strong>Etapa 2</strong>: rodar o script <code>scripts/find-candidates.ts</code> (TypeScript + Octokit) que consulta a Search API do GitHub e devolve uma lista de repositórios candidatos, com contagem de commits de IA por assinatura conhecida.</p>
 </section>
 
 <footer>

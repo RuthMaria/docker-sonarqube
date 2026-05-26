@@ -1,0 +1,4 @@
+node_modules/
+candidates.json
+*.db
+.env
